@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "appName": "term",
+  "lastModified": "2026-10-28T10:19:26.737171",
+  "settings": {
+    "theme": "Termius Obsidian Dark",
+    "fontFamily": "JetBrains Mono",
+    "fontSize": 14.0,
+    "cursorBlink": true,
+    "cursorStyle": "block",
+    "soundBell": false,
+    "autoSave": true
+  },
+  "groups": [
+    {
+      "id": "group_prod",
+      "name": "Production",
+      "colorHex": "#00D2FF",
+      "iconName": "server",
+      "description": "Live servers"
+    }
+  ],
+  "hosts": [
+    {
+      "id": "host_web_1",
+      "alias": "Web 1",
+      "hostname": "10.0.0.1",
+      "port": 22,
+      "username": "root",
+      "password": "",
+      "keyId": null,
+      "passphrase": "",
+      "group": "Production",
+      "colorHex": "#00D2FF",
+      "tags": [],
+      "notes": "",
+      "createdAt": "2026-10-28T10:19:26.734635",
+      "lastConnectedAt": null,
+      "status": "unknown",
+      "isFavorite": false
+    }
+  ],
+  "keys": [],
+  "snippets": [],
+  "portForwards": []
+}

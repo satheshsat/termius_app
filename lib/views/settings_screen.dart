@@ -119,7 +119,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'All hosts, SSH keys, snippets, and tunnels are serialized to termius_data.json',
+                      'All hosts, groups, SSH keys, snippets, and tunnels are serialized to termius_data.json',
                       style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
@@ -256,11 +256,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
 
-              // Reset to default seed
+              // Reset to clean fresh state
               OutlinedButton.icon(
                 onPressed: () => _confirmReset(context, provider),
-                icon: const Icon(Icons.restore, size: 16, color: AppColors.amber),
-                label: const Text('Restore Sample Data'),
+                icon: const Icon(Icons.refresh, size: 16, color: AppColors.amber),
+                label: const Text('Reset All Data'),
                 style: OutlinedButton.styleFrom(foregroundColor: AppColors.amber),
               ),
             ],
@@ -382,15 +382,18 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Cursor Blink Toggle
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Blinking Cursor in Terminal', style: TextStyle(fontSize: 14)),
-            subtitle: const Text('Emulates native VT100/xterm cursor blink', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-            value: cursorBlink,
-            activeThumbColor: AppColors.cyan,
-            onChanged: (val) {
-              provider.updateSetting('cursorBlink', val);
-            },
+          Material(
+            color: Colors.transparent,
+            child: SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Blinking Cursor in Terminal', style: TextStyle(fontSize: 14)),
+              subtitle: const Text('Emulates native VT100/xterm cursor blink', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+              value: cursorBlink,
+              activeThumbColor: AppColors.cyan,
+              onChanged: (val) {
+                provider.updateSetting('cursorBlink', val);
+              },
+            ),
           ),
         ],
       ),
@@ -413,7 +416,7 @@ class SettingsScreen extends StatelessWidget {
               Icon(Icons.info_outline, color: AppColors.textSecondary, size: 20),
               SizedBox(width: 10),
               Text(
-                'About Termius Clone App',
+                'About term App',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
@@ -616,9 +619,9 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reset to Sample Data'),
+        title: const Text('Reset Application Data'),
         content: const Text(
-          'This will restore default production VPS hosts, sample snippets, and SSH keys in termius_data.json. Continue?',
+          'This will reset your data to a clean fresh state (empty hosts, groups, snippets, and keys in termius_data.json). Continue?',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -629,7 +632,7 @@ class SettingsScreen extends StatelessWidget {
               if (ctx.mounted) Navigator.pop(ctx);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Restored sample Termius data!')),
+                  const SnackBar(content: Text('Reset data to clean fresh state!')),
                 );
               }
             },

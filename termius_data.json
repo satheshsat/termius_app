@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "appName": "Termius Cross-Platform SSH Clone",
-  "lastModified": "2026-10-27T10:26:17.596632",
+  "appName": "term",
+  "lastModified": "2026-10-28T04:45:00.000000",
   "settings": {
     "theme": "Termius Obsidian Dark",
     "fontFamily": "JetBrains Mono",
@@ -11,42 +11,9 @@
     "soundBell": false,
     "autoSave": true
   },
-  "groups": [
-    {
-      "id": "group_cloud",
-      "name": "Cloud Production",
-      "colorHex": "#00D2FF",
-      "iconName": "cloud",
-      "description": "Production cloud instances and API clusters"
-    },
-    {
-      "id": "group_aws",
-      "name": "AWS Staging",
-      "colorHex": "#8B5CF6",
-      "iconName": "server",
-      "description": "Staging environment and load balancers"
-    },
-    {
-      "id": "group_homelab",
-      "name": "Home Lab & IoT",
-      "colorHex": "#10B981",
-      "iconName": "microchip",
-      "description": "Local Raspberry Pi, NAS, and development boxes"
-    },
-    {
-      "id": "group_db",
-      "name": "Databases",
-      "colorHex": "#F59E0B",
-      "iconName": "database",
-      "description": "PostgreSQL, Redis, and MySQL clusters"
-    }
-  ],
-  "hosts": [
-  ],
-  "keys": [
-  ],
-  "snippets": [
-  ],
-  "portForwards": [
-  ]
+  "groups": [],
+  "hosts": [],
+  "keys": [],
+  "snippets": [],
+  "portForwards": []
 }

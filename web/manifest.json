@@ -1,6 +1,6 @@
 {
-    "name": "termius_app",
-    "short_name": "termius_app",
+    "name": "term",
+    "short_name": "term",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

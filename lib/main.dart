@@ -7,18 +7,18 @@ import 'views/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const TermiusApp());
+  runApp(const TermApp());
 }
 
-class TermiusApp extends StatelessWidget {
-  const TermiusApp({super.key});
+class TermApp extends StatelessWidget {
+  const TermApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AppProvider(),
       child: MaterialApp(
-        title: 'Termius - Modern SSH & SFTP Client',
+        title: 'term',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         home: const MainScreen(),
@@ -26,3 +26,6 @@ class TermiusApp extends StatelessWidget {
     );
   }
 }
+
+// Backward compatibility alias
+typedef TermiusApp = TermApp;

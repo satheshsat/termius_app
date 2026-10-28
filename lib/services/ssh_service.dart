@@ -19,7 +19,7 @@ class SSHService {
     session.status = TerminalConnectionStatus.connecting;
 
     // Print starting banner
-    terminal.write('\x1b[38;5;51m[Termius SSH]\x1b[0m Connecting to \x1b[1;37m${host.alias}\x1b[0m (${host.username}@${host.hostname}:${host.port})...\r\n');
+    terminal.write('\x1b[38;5;51m[term SSH]\x1b[0m Connecting to \x1b[1;37m${host.alias}\x1b[0m (${host.username}@${host.hostname}:${host.port})...\r\n');
 
     // On Web or forced simulation, jump directly to interactive simulator
     if (kIsWeb || forceSimulation) {
@@ -129,7 +129,7 @@ class SSHService {
     } catch (e) {
       debugPrint('Real SSH failed ($e). Launching interactive Terminal Simulation.');
       terminal.write('\x1b[33mℹ Note: Could not reach live host ($e).\x1b[0m\r\n');
-      terminal.write('\x1b[36m⚡ Switching to Termius Interactive UNIX Shell Simulator...\x1b[0m\r\n\r\n');
+      terminal.write('\x1b[36m⚡ Switching to term Interactive UNIX Shell Simulator...\x1b[0m\r\n\r\n');
       _startSimulatedShell(session, host);
     }
   }
@@ -152,7 +152,7 @@ class SSHService {
       ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║██║   ██║╚════██║
       ██║   ███████╗██║  ██║██║ ╚═╝ ██║██║╚██████╔╝███████║
       ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝ ╚═════╝ ╚══════╝\x1b[0m
-\x1b[90m  Welcome to Termius Cloud & Infrastructure Shell (v1.0.0)\x1b[0m
+\x1b[90m  Welcome to term Cloud & Infrastructure Shell (v1.0.0)\x1b[0m
 \x1b[32m✔ Authenticated securely with pseudo-TTY interactive shell\x1b[0m
 \x1b[90m* Host: \x1b[37m${host.hostname}:${host.port}\x1b[90m | OS: Ubuntu 24.04 LTS (x86_64)\x1b[0m
 \x1b[90m* Type \x1b[1;33mhelp\x1b[90m to view commands or run snippets from the bar below.\x1b[0m
@@ -440,7 +440,7 @@ Oct 27 09:52:00 ${host.alias.replaceAll(' ', '-').toLowerCase()} nginx[1890]: 19
       }
       session.inputBuffer = '';
       final promptUser = session.host?.username ?? 'user';
-      final promptHost = session.host?.alias.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '-').toLowerCase() ?? 'termius';
+      final promptHost = session.host?.alias.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '-').toLowerCase() ?? 'term';
       session.terminal.write('\x1b[1;32m$promptUser@$promptHost\x1b[0m:\x1b[1;34m~\x1b[0m\$ ');
     } else {
       try {

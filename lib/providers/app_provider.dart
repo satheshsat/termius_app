@@ -289,17 +289,50 @@ class AppProvider extends ChangeNotifier {
     _persist();
   }
 
-  void updateGroup(GroupModel group) {
+  void updateGroup(GroupModel group, {String? oldName}) {
     final idx = _groups.indexWhere((g) => g.id == group.id);
     if (idx != -1) {
+      final prevName = oldName ?? _groups[idx].name;
       _groups[idx] = group;
+
+      // Cascade update to hosts if group name changed
+      if (prevName != group.name) {
+        for (int i = 0; i < _hosts.length; i++) {
+          if (_hosts[i].group == prevName) {
+            _hosts[i] = _hosts[i].copyWith(group: group.name);
+          }
+        }
+        if (_selectedGroupFilter == prevName) {
+          _selectedGroupFilter = group.name;
+        }
+      }
       _persist();
     }
   }
 
   void deleteGroup(String id) {
-    _groups.removeWhere((g) => g.id == id);
-    _persist();
+    final idx = _groups.indexWhere((g) => g.id == id);
+    if (idx != -1) {
+      final groupName = _groups[idx].name;
+      _groups.removeAt(idx);
+
+      // Reassign affected hosts to Default
+      for (int i = 0; i < _hosts.length; i++) {
+        if (_hosts[i].group == groupName) {
+          _hosts[i] = _hosts[i].copyWith(group: 'Default');
+        }
+      }
+
+      if (_selectedGroupFilter == groupName) {
+        _selectedGroupFilter = null;
+      }
+
+      _persist();
+    }
+  }
+
+  int getGroupHostCount(String groupName) {
+    return _hosts.where((h) => h.group == groupName).length;
   }
 
   // ==================== Snippet CRUD ====================

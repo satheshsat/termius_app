@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'file_io.dart';
@@ -33,7 +32,7 @@ class StorageDataBundle {
   Map<String, dynamic> toJson() {
     return {
       'version': '1.0.0',
-      'appName': 'Termius Cross-Platform SSH Clone',
+      'appName': 'term',
       'lastModified': lastModified.toIso8601String(),
       'settings': settings,
       'groups': groups.map((g) => g.toJson()).toList(),
@@ -102,7 +101,101 @@ class StorageService {
     }
   }
 
-  /// Load data from termius_data.json or fallback/seed
+  // Known legacy sample/seed IDs to automatically purge from storage if encountered
+  static const Set<String> _seedGroupIds = {
+    'group_cloud',
+    'group_aws',
+    'group_homelab',
+    'group_db',
+  };
+
+  static const Set<String> _seedHostIds = {
+    'host_ubuntu_demo',
+    'host_aws_ec2',
+    'host_rpi5',
+    'host_postgres',
+    'host_local_dev',
+  };
+
+  static const Set<String> _seedKeyIds = {
+    'key_prod',
+    'key_homelab',
+  };
+
+  static const Set<String> _seedSnippetIds = {
+    'snip_docker_ps',
+    'snip_htop',
+    'snip_disk_usage',
+    'snip_listening_ports',
+    'snip_nginx_reload',
+    'snip_tail_logs',
+    'snip_sys_info',
+  };
+
+  static const Set<String> _seedPortForwardIds = {
+    'pf_postgres',
+    'pf_redis',
+  };
+
+  /// Sanitizes a bundle by removing all legacy sample seed data items if present.
+  /// Returns a new sanitized [StorageDataBundle] if any items were purged, or null if already clean.
+  static StorageDataBundle? sanitize(StorageDataBundle bundle) {
+    bool changed = false;
+
+    final sanitizedHosts = bundle.hosts.where((h) {
+      if (_seedHostIds.contains(h.id)) {
+        changed = true;
+        return false;
+      }
+      return true;
+    }).toList();
+
+    final sanitizedGroups = bundle.groups.where((g) {
+      if (_seedGroupIds.contains(g.id)) {
+        changed = true;
+        return false;
+      }
+      return true;
+    }).toList();
+
+    final sanitizedKeys = bundle.keys.where((k) {
+      if (_seedKeyIds.contains(k.id)) {
+        changed = true;
+        return false;
+      }
+      return true;
+    }).toList();
+
+    final sanitizedSnippets = bundle.snippets.where((s) {
+      if (_seedSnippetIds.contains(s.id)) {
+        changed = true;
+        return false;
+      }
+      return true;
+    }).toList();
+
+    final sanitizedPortForwards = bundle.portForwards.where((pf) {
+      if (_seedPortForwardIds.contains(pf.id)) {
+        changed = true;
+        return false;
+      }
+      return true;
+    }).toList();
+
+    if (!changed) return null;
+
+    return StorageDataBundle(
+      hosts: sanitizedHosts,
+      groups: sanitizedGroups,
+      keys: sanitizedKeys,
+      snippets: sanitizedSnippets,
+      portForwards: sanitizedPortForwards,
+      settings: bundle.settings,
+      lastModified: DateTime.now(),
+    );
+  }
+
+  /// Load data from termius_data.json or fallback to clean initial state
   Future<StorageDataBundle> loadData() async {
     try {
       String? jsonString;
@@ -111,21 +204,8 @@ class StorageService {
         final filePath = await getJsonFilePath();
         jsonString = await readTextFile(filePath);
 
-        // If file not yet present in executable path, check if it was previously saved in Documents
-        if (jsonString == null || jsonString.isEmpty) {
-          try {
-            final docsDir = await getApplicationDocumentsDirectory();
-            final legacyPath = '${docsDir.path}/$fileName';
-            jsonString = await readTextFile(legacyPath);
-            if (jsonString != null && jsonString.isNotEmpty) {
-              debugPrint('Migrating Termius data from Documents to executable path: $filePath');
-              await writeTextFile(filePath, jsonString);
-            }
-          } catch (_) {}
-        }
-
         if (jsonString != null && jsonString.isNotEmpty) {
-          debugPrint('Loaded Termius data from JSON file: $filePath');
+          debugPrint('Loaded term data from JSON file: $filePath');
         }
       }
 
@@ -137,14 +217,23 @@ class StorageService {
 
       if (jsonString != null && jsonString.isNotEmpty) {
         final decoded = json.decode(jsonString) as Map<String, dynamic>;
-        final bundle = StorageDataBundle.fromJson(decoded);
+        var bundle = StorageDataBundle.fromJson(decoded);
+
+        // Sanitize out any legacy default seeding data
+        final cleanedBundle = sanitize(bundle);
+        if (cleanedBundle != null) {
+          debugPrint('Purged legacy seed data from storage');
+          bundle = cleanedBundle;
+          await saveData(bundle);
+        }
+
         return bundle;
       }
     } catch (e, stack) {
       debugPrint('Error loading JSON data: $e\n$stack');
     }
 
-    // If nothing found or error, create default seed data and save to file immediately
+    // If nothing found or error, create clean default data and save to file immediately
     final defaultBundle = createDefaultData();
     await saveData(defaultBundle);
     return defaultBundle;
@@ -193,229 +282,9 @@ class StorageService {
     }
   }
 
-  /// Default seed data with realistic servers, snippets, keys, groups
+  /// Default clean empty data for a fresh start (no sample seed data)
   static StorageDataBundle createDefaultData() {
     final now = DateTime.now();
-
-    final groups = [
-      GroupModel(
-        id: 'group_cloud',
-        name: 'Cloud Production',
-        colorHex: '#00D2FF',
-        iconName: 'cloud',
-        description: 'Production cloud instances and API clusters',
-      ),
-      GroupModel(
-        id: 'group_aws',
-        name: 'AWS Staging',
-        colorHex: '#8B5CF6',
-        iconName: 'server',
-        description: 'Staging environment and load balancers',
-      ),
-      GroupModel(
-        id: 'group_homelab',
-        name: 'Home Lab & IoT',
-        colorHex: '#10B981',
-        iconName: 'microchip',
-        description: 'Local Raspberry Pi, NAS, and development boxes',
-      ),
-      GroupModel(
-        id: 'group_db',
-        name: 'Databases',
-        colorHex: '#F59E0B',
-        iconName: 'database',
-        description: 'PostgreSQL, Redis, and MySQL clusters',
-      ),
-    ];
-
-    final keys = [
-      SSHKeyModel(
-        id: 'key_prod',
-        name: 'id_ed25519_production',
-        keyType: 'Ed25519',
-        publicKey:
-            'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGe9mQ0sR3d0K1Y2e5e4n5m6termius-demo-key dev@termius.app',
-        privateKey:
-            '-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\nQyNTUxOQAAACAAg5+7+c+32+TermiusKeyDemoMockProductionPrivate123456789==\n-----END OPENSSH PRIVATE KEY-----',
-        fingerprint: 'SHA256:dZ81kx99wLa8U/J7Q3r5pL4m3b+K1Y9vE3m2q',
-        createdAt: now.subtract(const Duration(days: 30)),
-      ),
-      SSHKeyModel(
-        id: 'key_homelab',
-        name: 'id_rsa_homelab',
-        keyType: 'RSA',
-        publicKey:
-            'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC8+SampleTermiusLabKeyRsa2048BitLengthSecureKey pi@raspberrypi',
-        privateKey:
-            '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAvsampleRsaKeyDataHereTermiusAppPrivateFile12345\n-----END RSA PRIVATE KEY-----',
-        fingerprint: 'SHA256:yT42b99wLa1U/M3Q8r5pL0m3b+K1Y2vE8m1q',
-        createdAt: now.subtract(const Duration(days: 60)),
-      ),
-    ];
-
-    final hosts = [
-      HostModel(
-        id: 'host_ubuntu_demo',
-        alias: 'Ubuntu Production VPS',
-        hostname: '198.51.100.24',
-        port: 22,
-        username: 'root',
-        password: '',
-        keyId: 'key_prod',
-        group: 'Cloud Production',
-        colorHex: '#00D2FF',
-        tags: ['prod', 'nginx', 'fastapi', 'ubuntu'],
-        notes: 'Main Nginx reverse proxy and API cluster entrypoint.',
-        createdAt: now.subtract(const Duration(days: 14)),
-        lastConnectedAt: now.subtract(const Duration(hours: 3)),
-        status: 'online',
-        isFavorite: true,
-      ),
-      HostModel(
-        id: 'host_aws_ec2',
-        alias: 'AWS EC2 Microservices',
-        hostname: 'ec2-54-210-14-88.compute-1.amazonaws.com',
-        port: 22,
-        username: 'ubuntu',
-        password: '',
-        keyId: 'key_prod',
-        group: 'AWS Staging',
-        colorHex: '#8B5CF6',
-        tags: ['aws', 'staging', 'docker', 'k8s'],
-        notes: 'Docker Swarm worker node in us-east-1.',
-        createdAt: now.subtract(const Duration(days: 20)),
-        lastConnectedAt: now.subtract(const Duration(days: 1)),
-        status: 'online',
-        isFavorite: true,
-      ),
-      HostModel(
-        id: 'host_rpi5',
-        alias: 'Raspberry Pi 5 Lab',
-        hostname: '192.168.1.150',
-        port: 22,
-        username: 'pi',
-        password: 'raspberrypi',
-        keyId: 'key_homelab',
-        group: 'Home Lab & IoT',
-        colorHex: '#10B981',
-        tags: ['homelab', 'arm64', 'pihole', 'wireguard'],
-        notes: 'Home gateway running Pi-hole DNS and WireGuard VPN.',
-        createdAt: now.subtract(const Duration(days: 45)),
-        lastConnectedAt: now.subtract(const Duration(minutes: 42)),
-        status: 'online',
-        isFavorite: true,
-      ),
-      HostModel(
-        id: 'host_postgres',
-        alias: 'PostgreSQL Primary DB',
-        hostname: '10.0.4.12',
-        port: 2222,
-        username: 'postgres',
-        password: '',
-        keyId: 'key_prod',
-        group: 'Databases',
-        colorHex: '#F59E0B',
-        tags: ['database', 'postgres', 'replication', 'nvme'],
-        notes: 'Primary database node with WAL archiving and streaming replication.',
-        createdAt: now.subtract(const Duration(days: 60)),
-        lastConnectedAt: now.subtract(const Duration(days: 3)),
-        status: 'online',
-        isFavorite: false,
-      ),
-      HostModel(
-        id: 'host_local_dev',
-        alias: 'Localhost SSH / Dev Shell',
-        hostname: '127.0.0.1',
-        port: 22,
-        username: 'sathesh',
-        password: '',
-        group: 'Home Lab & IoT',
-        colorHex: '#EC4899',
-        tags: ['local', 'mint', 'dev'],
-        notes: 'Local workstation terminal session.',
-        createdAt: now.subtract(const Duration(days: 5)),
-        lastConnectedAt: now.subtract(const Duration(minutes: 5)),
-        status: 'online',
-        isFavorite: true,
-      ),
-    ];
-
-    final snippets = [
-      SnippetModel(
-        id: 'snip_docker_ps',
-        title: 'Docker Containers Status',
-        command:
-            'docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"',
-        category: 'Docker',
-        description: 'Displays a clean table of active and stopped containers.',
-      ),
-      SnippetModel(
-        id: 'snip_htop',
-        title: 'Interactive System Monitor',
-        command: 'htop || top',
-        category: 'Monitoring',
-        description: 'Launches real-time process manager and system metrics.',
-      ),
-      SnippetModel(
-        id: 'snip_disk_usage',
-        title: 'Disk Space Overview (Clean)',
-        command: 'df -h --exclude-type=tmpfs --exclude-type=devtmpfs',
-        category: 'System',
-        description: 'Clean breakdown of storage usage across physical disks.',
-      ),
-      SnippetModel(
-        id: 'snip_listening_ports',
-        title: 'Listening TCP/UDP Ports',
-        command: 'ss -tulpn | grep LISTEN',
-        category: 'Network',
-        description: 'Lists all processes with open ports and sockets.',
-      ),
-      SnippetModel(
-        id: 'snip_nginx_reload',
-        title: 'Nginx Config Test & Reload',
-        command: 'sudo nginx -t && sudo systemctl reload nginx',
-        category: 'Web Server',
-        description: 'Verifies Nginx syntax then applies changes with zero downtime.',
-      ),
-      SnippetModel(
-        id: 'snip_tail_logs',
-        title: 'Follow System Journal Logs',
-        command: 'journalctl -f -n 100',
-        category: 'Logs',
-        description: 'Streams live output of the latest 100 systemd log entries.',
-      ),
-      SnippetModel(
-        id: 'snip_sys_info',
-        title: 'Fast System Diagnostic',
-        command:
-            'echo "=== HOSTNAME & KERNEL ===" && uname -a && echo -e "\n=== UPTIME & LOAD ===" && uptime && echo -e "\n=== MEMORY ===" && free -h',
-        category: 'System',
-        description: 'Prints kernel, uptime, load average, and RAM usage in one glance.',
-      ),
-    ];
-
-    final portForwards = [
-      PortForwardModel(
-        id: 'pf_postgres',
-        name: 'Secure Remote Postgres Tunnel',
-        hostId: 'host_postgres',
-        forwardType: 'Local',
-        localPort: 5433,
-        remoteHost: '127.0.0.1',
-        remotePort: 5432,
-        isActive: false,
-      ),
-      PortForwardModel(
-        id: 'pf_redis',
-        name: 'Redis Cache Port 6379',
-        hostId: 'host_ubuntu_demo',
-        forwardType: 'Local',
-        localPort: 6380,
-        remoteHost: '127.0.0.1',
-        remotePort: 6379,
-        isActive: false,
-      ),
-    ];
 
     final settings = {
       'theme': 'Termius Obsidian Dark',
@@ -428,11 +297,11 @@ class StorageService {
     };
 
     return StorageDataBundle(
-      hosts: hosts,
-      groups: groups,
-      keys: keys,
-      snippets: snippets,
-      portForwards: portForwards,
+      hosts: [],
+      groups: [],
+      keys: [],
+      snippets: [],
+      portForwards: [],
       settings: settings,
       lastModified: now,
     );

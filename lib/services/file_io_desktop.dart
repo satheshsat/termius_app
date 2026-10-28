@@ -4,6 +4,12 @@ import 'package:path_provider/path_provider.dart';
 
 Future<String> getExecutableStoragePath(String fileName) async {
   try {
+    // If running in test environment or flutter_tester, use project working directory
+    if (Platform.environment.containsKey('FLUTTER_TEST') ||
+        Platform.resolvedExecutable.contains('flutter_tester')) {
+      return '${Directory.current.path}/$fileName';
+    }
+
     // On Desktop (Linux, Windows, macOS), store in the executable's directory
     if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
       final execPath = Platform.resolvedExecutable;
@@ -33,7 +39,13 @@ Future<String?> readTextFile(String path) async {
 
 Future<void> writeTextFile(String path, String content) async {
   try {
-    final file = File(path);
-    await file.writeAsString(content, flush: true);
-  } catch (_) {}
+    final tmpFile = File('$path.tmp');
+    await tmpFile.writeAsString(content, flush: true);
+    await tmpFile.rename(path);
+  } catch (_) {
+    try {
+      final file = File(path);
+      await file.writeAsString(content, flush: true);
+    } catch (_) {}
+  }
 }

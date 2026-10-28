@@ -29,7 +29,7 @@ class MainScreen extends StatelessWidget {
               CircularProgressIndicator(color: AppColors.cyan),
               SizedBox(height: 16),
               Text(
-                'Loading Termius data from JSON file...',
+                'Loading term data from JSON file...',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
             ],
@@ -124,29 +124,31 @@ class MainScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
                   child: Row(
                     children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.cyan, AppColors.purple],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.cyan.withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(9),
+                        child: Image.asset(
+                          'assets/icon/app_icon.png',
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [AppColors.cyan, AppColors.purple],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(9),
                             ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: FaIcon(
-                            FontAwesomeIcons.terminal,
-                            color: Colors.black,
-                            size: 16,
+                            child: const Center(
+                              child: FaIcon(
+                                FontAwesomeIcons.terminal,
+                                color: Colors.black,
+                                size: 16,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -155,16 +157,16 @@ class MainScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'TERMIUS',
+                            'term',
                             style: TextStyle(
                               letterSpacing: 2.0,
                               fontWeight: FontWeight.w900,
-                              fontSize: 16,
+                              fontSize: 18,
                               color: AppColors.textPrimary,
                             ),
                           ),
                           Text(
-                            'SSH & Cloud Suite',
+                            'SSH & Terminal Suite',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
