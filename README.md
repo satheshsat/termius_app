@@ -5,7 +5,7 @@
 ## Getting Started
 
 
-# Term — The Modern Terminal for Devops & Sysadmins
+### Term — The Modern Terminal for Devops & Sysadmins
 
 Term is a cross-platform, cloud-synced terminal client designed for modern infrastructure management. Heavily inspired by Termius, it acts as a centralized command center for SSH, Mosh, and Telnet connections, complete with built-in port forwarding, SFTP file transfers, and an encrypted snippet manager to automate your daily workflows.
 
